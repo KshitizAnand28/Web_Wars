@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Solartec - Sustainability Impact Calculator</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta content="" name="keywords">
+    <meta content="" name="description">
+    <!-- Favicon -->
+    <link href="img/favicon.ico" rel="icon">
+    <!-- Google Web Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500&family=Roboto:wght@500;700;900&display=swap" rel="stylesheet"> 
+    <!-- Icon Font Stylesheet -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Libraries Stylesheet -->
+    <link href="lib/animate/animate.min.css" rel="stylesheet">
+    <link href="lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet">
+    <link href="lib/lightbox/css/lightbox.min.css" rel="stylesheet">
+    <!-- Customized Bootstrap Stylesheet -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <!-- Template Stylesheet -->
+    <link href="css/style.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Dark Mode Specific Styles */
+        body.dark-mode {
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+        body.dark-mode .card {
+            background-color: #1E1E1E;
+            color: #e0e0e0;
+            border-color: #3C3C3C;
+        }
+        body.dark-mode .form-control {
+            background-color: #2C2C2C;
+            color: #e0e0e0;
+            border-color: #3C3C3C;
+        }
+        body.dark-mode .btn-primary {
+            background-color: #32C36C;
+            border-color: #32C36C;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar Start -->
+    <nav class="navbar navbar-expand-lg bg-white navbar-light sticky-top p-0">
+        <a href="index.html" class="navbar-brand d-flex align-items-center border-end px-4 px-lg-5">
+            <h2 class="m-0 text-primary">Solartec</h2>
+        </a>
+        <button type="button" class="navbar-toggler me-4" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarCollapse">
+            <div class="navbar-nav ms-auto p-4 p-lg-0">
+                <a href="index.html" class="nav-item nav-link">Home</a>
+                <div class="nav-item form-check form-switch my-auto me-4">
+                    <input class="form-check-input" type="checkbox" id="darkModeSwitch">
+                    <label class="form-check-label" for="darkModeSwitch">
+                        <i class="fa fa-moon-o" id="darkModeIcon"></i>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <!-- Navbar End -->
+
+    <!-- Sustainability Impact Calculator Start -->
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-lg-6 offset-lg-3">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="text-center">Sustainability Impact Calculator</h3>
+                    </div>
+                    <div class="card-body">
+                        <form id="sustainabilityForm">
+                            <div class="mb-3">
+                                <label class="form-label">Monthly Electricity Consumption (kWh)</label>
+                                <input type="number" class="form-control" id="electricityConsumption" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Transportation</label>
+                                <select class="form-select" id="transportationType">
+                                    <option value="car">Personal Car</option>
+                                    <option value="public">Public Transport</option>
+                                    <option value="bike">Bicycle/Walking</option>
+                                    <option value="electric">Electric Vehicle</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Miles Traveled per Month</label>
+                                <input type="number" class="form-control" id="milesTraveled" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Waste Recycling</label>
+                                <select class="form-select" id="recyclingHabit">
+                                    <option value="none">No Recycling</option>
+                                    <option value="some">Partial Recycling</option>
+                                    <option value="full">Full Recycling</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Calculate Impact</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4" id="resultsSection" style="display:none;">
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">Carbon Footprint Breakdown</div>
+                    <div class="card-body">
+                        <canvas id="carbonFootprintChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">Sustainability Recommendations</div>
+                    <div class="card-body" id="recommendationsList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Sustainability Impact Calculator End -->
+
+    <!-- Dark Mode and Calculation Script -->
+    <script>
+        // Dark Mode Toggle
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const darkModeSwitch = document.getElementById('darkModeSwitch');
+            const darkModeIcon = document.getElementById('darkModeIcon');
+            const body = document.body;
+
+            // Check for saved dark mode preference
+            if(localStorage.getItem('darkMode') === 'enabled') {
+                enableDarkMode();
+            }
+
+            darkModeSwitch.addEventListener('click', () => {
+                if(body.classList.contains('dark-mode')) {
+                    disableDarkMode();
+                } else {
+                    enableDarkMode();
+                }
+            });
+
+            function enableDarkMode() {
+                body.classList.add('dark-mode');
+                darkModeIcon.classList.remove('fa-moon-o');
+                darkModeIcon.classList.add('fa-sun-o');
+                darkModeSwitch.checked = true;
+                localStorage.setItem('darkMode', 'enabled');
+            }
+
+            function disableDarkMode() {
+                body.classList.remove('dark-mode');
+                darkModeIcon.classList.remove('fa-sun-o');
+                darkModeIcon.classList.add('fa-moon-o');
+                darkModeSwitch.checked = false;
+                localStorage.removeItem('darkMode');
+            }
+        });
+
+        // Sustainability Calculator Logic
+        document.getElementById('sustainabilityForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const electricityConsumption = parseFloat(document.getElementById('electricityConsumption').value);
+            const transportationType = document.getElementById('transportationType').value;
+            const milesTraveled = parseFloat(document.getElementById('milesTraveled').value);
+            const recyclingHabit = document.getElementById('recyclingHabit').value;
+
+            // Carbon footprint calculations (simplified)
+            const electricityEmissions = electricityConsumption * 0.5; // kg CO2 per kWh
+            let transportEmissions = 0;
+
+            switch(transportationType) {
+                case 'car': 
+                    transportEmissions = milesTraveled * 0.404; // kg CO2 per mile
+                    break;
+                case 'public':
+                    transportEmissions = milesTraveled * 0.192; // kg CO2 per mile
+                    break;
+                case 'electric':
+                    transportEmissions = milesTraveled * 0.091; // kg CO2 per mile
+                    break;
+                case 'bike':
+                    transportEmissions = 0;
+                    break;
+            }
+
+            const recyclingReductionFactor = recyclingHabit === 'none' ? 1 : 
+                                              recyclingHabit === 'some' ? 0.7 : 0.3;
+            const totalEmissions = (electricityEmissions + transportEmissions) * recyclingReductionFactor;
+
+            // Show results section
+            document.getElementById('resultsSection').style.display = 'flex';
+
+            // Create carbon footprint chart
+            const ctx = document.getElementById('carbonFootprintChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Electricity', 'Transportation', 'Waste'],
+                    datasets: [{
+                        data: [
+                            electricityEmissions, 
+                            transportEmissions, 
+                            totalEmissions - (electricityEmissions + transportEmissions)
+                        ],
+                        backgroundColor: ['#32C36C', '#FF6384', '#36A2EB']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    title: {
+                        display: true,
+                        text: 'Carbon Footprint Breakdown'
+                    }
+                }
+            });
+
+            // Generate recommendations
+            const recommendationsList = document.getElementById('recommendationsList');
+            recommendationsList.innerHTML = '';
+
+            const recommendations = [
+                electricityConsumption > 500 ? 
+                    "Consider switching to energy-efficient appliances and using LED lighting." : 
+                    "Great job on managing electricity consumption!",
+                transportationType === 'car' ? 
+                    "Try carpooling, using public transport, or switching to an electric vehicle." : 
+                    "Excellent choice of transportation method!",
+                recyclingHabit === 'none' ? 
+                    "Start a comprehensive recycling program at home." : 
+                    "Continue improving your recycling habits!"
+            ];
+
+            recommendations.forEach(rec => {
+                const li = document.createElement('p');
+                li.textContent = rec;
+                li.classList.add('mb-2');
+                recommendationsList.appendChild(li);
+            });
+        });
+    </script>
+</body>
+</html>
